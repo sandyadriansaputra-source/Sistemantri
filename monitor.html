@@ -2,90 +2,59 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Monitor Antrian Pegadaian - Fix Final</title>
+    <title>Monitor Antrian Pegadaian - Stabil</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Arial', sans-serif; background: #007d3a; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: Arial; background: #007d3a; overflow: hidden; }
         .container { display: flex; height: 100vh; width: 100vw; }
-        
-        /* Layar YouTube */
         .video-section { flex: 6; background: black; }
-        iframe { width: 100%; height: 100%; border: none; }
-
-        /* Layar Nomor Antrian */
         .queue-section { flex: 4; display: flex; flex-direction: column; justify-content: center; align-items: center; background: white; color: #333; }
-        h1 { font-size: 10rem; margin: 10px 0; color: #007d3a; font-weight: bold; }
-        h2 { font-size: 3rem; color: #666; margin: 0; }
-        .nama-nasabah { font-size: 2.5rem; color: #444; border-top: 2px solid #ddd; padding-top: 20px; width: 80%; text-align: center; }
-
-        /* Tombol Start (Wajib Klik) */
-        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; cursor: pointer; text-align: center; }
-        .btn-start { border: 4px solid #fff; padding: 30px; border-radius: 20px; font-size: 2.5rem; font-weight: bold; background: #007d3a; }
+        h1 { font-size: 10rem; margin: 0; color: #007d3a; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; justify-content: center; align-items: center; color: white; cursor: pointer; text-align: center; font-size: 2rem; }
     </style>
 </head>
 <body>
 
     <div id="overlay" onclick="startMonitor()">
-        <div class="btn-start">KLIK DI SINI UNTUK<br>MULAI MONITOR & VIDEO</div>
+        <div style="border: 2px solid white; padding: 20px;">KLIK UNTUK AKTIFKAN MONITOR</div>
     </div>
 
     <div class="container">
         <div class="video-section">
-            <iframe id="youtubeVideo" src="" allow="autoplay; encrypted-media"></iframe>
+            <iframe id="youtubeVideo" width="100%" height="100%" 
+                src="" 
+                allow="autoplay; encrypted-media" allowfullscreen>
+            </iframe>
         </div>
         <div class="queue-section">
-            <h2>NOMOR ANTRIAN</h2>
+            <h2>ANTRIAN</h2>
             <h1 id="nomorDisplay">---</h1>
-            <div class="nama-nasabah" id="namaDisplay">Menunggu...</div>
+            <h3 id="namaDisplay">Menunggu...</h3>
         </div>
     </div>
 
     <script>
-        // --- 1. GANTI LINK GOOGLE SCRIPT ANDA DI SINI ---
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxr54D2wJB7Lp9Nx9au126J82orMSzEqOYjPAFc1XnprHUlmQ9h47eg3mzYkP0fXayr/exec';
-        
-        // --- 2. GANTI ID VIDEO YOUTUBE SAJA (CONTOH: P2Enn8Y2qCw) ---
-        // Jika linknya https://www.youtube.com/watch?v=P2Enn8Y2qCw
-        // Gunakan hanya kode belakangnya saja: 'P2Enn8Y2qCw'
-        const videoID = 'tgbNymZ7vqY'; 
-
-        let nomorTerakhir = "";
-        let isStarted = false;
+        const scriptURL = 'MASUKKAN_URL_APPS_SCRIPT_ANDA';
+        const videoID = 'tgbNymZ7vqY'; // Ganti dengan ID video (11 karakter di belakang v=)
 
         function startMonitor() {
             document.getElementById('overlay').style.display = 'none';
-            isStarted = true;
+            // Set URL Video saat tombol diklik agar autoplay diizinkan browser
+            document.getElementById('youtubeVideo').src = `https://www.youtube.com/embed/${videoID}?autoplay=1&mute=1&loop=1&playlist=${videoID}`;
             
-            // Set link video secara manual saat klik untuk memicu izin Autoplay
-            const finalURL = "https://www.youtube.com/embed/" + videoID + "?autoplay=1&mute=1&loop=1&playlist=" + videoID + "&rel=0&controls=0";
-            document.getElementById('youtubeVideo').src = finalURL;
-            
-            updateMonitor();
+            setInterval(updateData, 5000); // Cek antrian setiap 5 detik
         }
 
-        function updateMonitor() {
-            if (!isStarted) return;
+        function updateData() {
             fetch(scriptURL)
             .then(res => res.json())
             .then(data => {
                 let antrian = data.slice().reverse().find(row => row[2] === "Dipanggil");
-                if (antrian && antrian[1] !== nomorTerakhir) {
-                    nomorTerakhir = antrian[1];
+                if (antrian) {
                     document.getElementById('nomorDisplay').innerText = antrian[1];
                     document.getElementById('namaDisplay').innerText = antrian[0];
-                    panggilSuara(antrian[1]);
                 }
-            })
-            .catch(err => console.error("Koneksi Gagal:", err));
+            });
         }
-
-        function panggilSuara(nomor) {
-            let msg = new SpeechSynthesisUtterance("Nomor antrian " + nomor + ", silakan menuju loket");
-            msg.lang = 'id-ID';
-            window.speechSynthesis.speak(msg);
-        }
-
-        // Cek data setiap 5 detik
-        setInterval(updateMonitor, 5000);
     </script>
 </body>
 </html>
