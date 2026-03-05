@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antrian Pegadaian</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        input { width: 80%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
+        button { background-color: #007d3a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        #nomerAntrian { font-size: 48px; font-weight: bold; color: #007d3a; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Ambil Antrian</h2>
+        <p>Masukkan nama Anda:</p>
+        <input type="text" id="inputNama" placeholder="Contoh: Budi">
+        <br>
+        <button onclick="kirimData()">Ambil Nomor</button>
+        <div id="hasil" style="display:none;">
+            <p>Nomor Antrian Anda:</p>
+            <div id="nomerAntrian">...</div>
+        </div>
+    </div>
+
+    <script>
+        // GANTI URL DI BAWAH INI DENGAN URL DARI GOOGLE APPS SCRIPT ANDA
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzjEfmYz1aDEfHRp-e7Zgx01JUtt5956jfEMHW46oGsl_LOkITCPsOylWB-4or8mZk/exec';
+
+        function kirimData() {
+            const nama = document.getElementById('inputNama').value;
+            if(!nama) return alert("Isi nama dulu ya!");
+
+            fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify({ "nama": nama })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('hasil').style.display = 'block';
+                document.getElementById('nomerAntrian').innerText = data.nomor;
+            })
+            .catch(error => console.error('Error!', error.message));
+        }
+    </script>
+</body>
+</html>
