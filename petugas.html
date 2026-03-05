@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Panel Petugas - Pegadaian</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #e8f5e9; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007d3a; color: white; }
+        button { background: #2196F3; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>Daftar Antrian Hari Ini</h1>
+    <button onclick="muatData()">Refresh Daftar</button>
+    <br><br>
+    <table id="tabelAntrian">
+        <thead>
+            <tr>
+                <th>Nama Nasabah</th>
+                <th>Nomor</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+
+    <script>
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzjEfmYz1aDEfHRp-e7Zgx01JUtt5956jfEMHW46oGsl_LOkITCPsOylWB-4or8mZk/exec'; // Gunakan URL Web App yang sama
+
+        function muatData() {
+            fetch(scriptURL)
+            .then(res => res.json())
+            .then(data => {
+                let html = '';
+                data.forEach(row => {
+                    html += `<tr>
+                        <td>${row[0]}</td>
+                        <td>${row[1]}</td>
+                        <td>${row[2]}</td>
+                        <td><button onclick="panggil('${row[1]}')">Panggil</button></td>
+                    </tr>`;
+                });
+                document.querySelector('#tabelAntrian tbody').innerHTML = html;
+            });
+        }
+
+        function panggil(nomor) {
+            alert("Memanggil nomor: " + nomor);
+            // Nanti di sini kita akan tambah logika suara
+        }
+
+        // Muat data otomatis saat halaman dibuka
+        muatData();
+    </script>
+</body>
+</html>
