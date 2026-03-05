@@ -36,13 +36,21 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbxr54D2wJB7Lp9Nx9au126J82orMSzEqOYjPAFc1XnprHUlmQ9h47eg3mzYkP0fXayr/exec';
         const videoID = 'sW_GoNs5GEo&list=PLJ7gnhfTxzw506uA8_gwPMdy47pyofhXp'; // Ganti dengan ID video (11 karakter di belakang v=)
 
-        function startMonitor() {
-            document.getElementById('overlay').style.display = 'none';
-            // Set URL Video saat tombol diklik agar autoplay diizinkan browser
-            document.getElementById('youtubeVideo').src = `https://www.youtube.com/embed/${videoID}?autoplay=1&mute=1&loop=1&playlist=${videoID}`;
-            
-            setInterval(updateData, 5000); // Cek antrian setiap 5 detik
-        }
+        function aktifkanLayar() {
+  document.getElementById('overlay').style.display = 'none';
+  audioOn = true;
+  
+  google.script.run.withSuccessHandler(function(nama) {
+    document.getElementById('nama-kantor-header').innerText = nama;
+  }).getNamaKantor();
+
+  updateRunningText();
+  setInterval(updateRunningText, 300000);
+  
+  getVid();
+  setInterval(checkUpdate, 3000);
+  window.speechSynthesis.speak(new SpeechSynthesisUtterance(" "));
+}
 
         function updateData() {
             fetch(scriptURL)
