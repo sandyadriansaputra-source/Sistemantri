@@ -1,63 +1,156 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Panel Petugas - Pegadaian</title>
+    <meta charset="UTF-8">
+    <title>Dashboard Petugas - PT Pegadaian</title>
     <style>
-        body { font-family: Arial; background: #f4f4f4; padding: 20px; text-align: center; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        h2 { color: #007d3a; }
-        .btn-panggil { background: #007d3a; color: white; border: none; padding: 15px 30px; font-size: 1.2rem; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn-panggil:active { background: #004d24; }
-        .status { margin-top: 15px; color: #666; font-style: italic; }
+        :root { --green: #007d3a; --dark: #004d24; --gold: #ffcc00; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
+        
+        /* Layout Grid */
+        .dashboard { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; max-width: 1200px; margin: auto; }
+        
+        /* Header */
+        .top-bar { grid-column: span 2; background: white; padding: 15px 30px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .logo { height: 50px; }
+
+        /* Stats Cards */
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); text-align: center; }
+        .served-card { border-left: 10px solid var(--green); }
+        .queue-card { border-left: 10px solid var(--gold); }
+        
+        .stat-label { font-size: 0.9rem; color: #666; font-weight: bold; text-transform: uppercase; }
+        .stat-value { font-size: 3.5rem; font-weight: 900; color: var(--green); margin: 10px 0; }
+
+        /* Main Controls */
+        .controls { background: white; padding: 30px; border-radius: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px; }
+        .next-info { font-size: 1.2rem; margin-bottom: 20px; }
+        .next-info b { font-size: 2.5rem; color: var(--green); display: block; }
+
+        /* Buttons */
+        .btn { border: none; padding: 18px 30px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1.1rem; transition: 0.3s; }
+        .btn-main { background: var(--green); color: white; box-shadow: 0 6px 15px rgba(0,125,58,0.3); }
+        .btn-main:hover { background: var(--dark); transform: translateY(-2px); }
+        .btn-main:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+        
+        .btn-alt { background: #fff; color: var(--green); border: 2px solid var(--green); }
+        .btn-alt:hover { background: #e8f5e9; }
+        
+        .btn-danger { background: #fff; color: #d32f2f; border: 1px solid #ffcdd2; font-size: 0.8rem; margin-top: 40px; padding: 10px; }
+        .btn-danger:hover { background: #ffebee; }
+
+        .status-pill { padding: 5px 15px; border-radius: 20px; background: #e8f5e9; color: var(--green); font-size: 0.8rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <img src="https://monev.pegadaian.co.id/userdata/profile_site/5662a273c270a215cdc46900d8a882f280e84b32c3f02.png" width="150">
-    <h2>LOKET PELAYANAN</h2>
-    <div id="infoAntrian">Memuat antrian...</div>
-    <button class="btn-panggil" onclick="panggilSekarang()">PANGGIL BERIKUTNYA</button>
-    <div class="status" id="statusPesan">Siap melayani.</div>
+<div class="dashboard">
+    <div class="top-bar">
+        <img src="https://monev.pegadaian.co.id/userdata/profile_site/5662a273c270a215cdc46900d8a882f280e84b32c3f02.png" class="logo">
+        <div id="clock" class="status-pill">Memuat...</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="card served-card">
+            <div class="stat-label">Sedang Dilayani</div>
+            <div id="currentServed" class="stat-value">---</div>
+            <div id="currentName" style="color:#666">Belum ada nasabah</div>
+            <button class="btn btn-alt" style="margin-top:15px;" onclick="panggilUlang()">PANGGIL ULANG</button>
+        </div>
+
+        <div class="card queue-card">
+            <div class="stat-label">Sisa Antrian</div>
+            <div id="remainingQueue" class="stat-value" style="color:var(--gold)">0</div>
+            <div style="color:#666">Nasabah Menunggu</div>
+        </div>
+    </div>
+
+    <div class="controls card">
+        <div class="next-info">
+            NASABAH BERIKUTNYA:
+            <b id="nextNumber">---</b>
+            <span id="nextName" style="color:#666">Tidak ada antrian</span>
+        </div>
+        
+        <button id="btnPanggil" class="btn btn-main" onclick="panggilBaru()" disabled>PANGGIL BERIKUTNYA</button>
+        
+        <button class="btn btn-danger" onclick="bersihkanData()">BERSIHKAN SEMUA DATA SORE HARI</button>
+        <div id="syncStatus" style="font-size: 0.7rem; color: #999; margin-top: 10px;">Menghubungkan...</div>
+    </div>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx5FP_boXKSdxpRa7Ecnu-laOiTRYnrcrVQKLzTd2hUgAlaZvvIMm34sXMpN_uO-qmF/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzVFCqEQdF_1zkv70WfpXiAurZH8QPPMrrUEKMoyBKezP15HvIHPKWBiiBMu9LBJdIF/exec';
     let barisBerikutnya = -1;
+    let barisSedangDilayani = -1;
 
-    function muatAntrian() {
+    function updateDashboard() {
         fetch(scriptURL)
         .then(res => res.json())
         .then(res => {
-            // Cari antrian pertama yang statusnya masih kosong (belum dipanggil)
             let data = res.antrian;
-            let index = data.findIndex((row, i) => i > 0 && row[2] === ""); 
             
-            if (index !== -1) {
-                barisBerikutnya = index;
-                document.getElementById('infoAntrian').innerHTML = "<b>Nasabah Berikutnya:</b><br><h1 style='margin:10px 0'>" + data[index][1] + "</h1>" + data[index][0];
-                document.getElementById('statusPesan').innerText = "Silakan klik panggil.";
+            // 1. Hitung Sisa Antrian & Nasabah Berikutnya
+            let antrianMenunggu = data.filter((row, i) => i > 0 && row[2] === "");
+            document.getElementById('remainingQueue').innerText = antrianMenunggu.length;
+            
+            if (antrianMenunggu.length > 0) {
+                let nextIdx = data.findIndex((row, i) => i > 0 && row[2] === "");
+                barisBerikutnya = nextIdx;
+                document.getElementById('nextNumber').innerText = data[nextIdx][1];
+                document.getElementById('nextName').innerText = data[nextIdx][0];
+                document.getElementById('btnPanggil').disabled = false;
             } else {
                 barisBerikutnya = -1;
-                document.getElementById('infoAntrian').innerText = "Tidak ada antrian menunggu.";
+                document.getElementById('nextNumber').innerText = "---";
+                document.getElementById('nextName').innerText = "Kosong";
+                document.getElementById('btnPanggil').disabled = true;
             }
+
+            // 2. Info Sedang Dilayani (Cari yang statusnya 'Dipanggil' terakhir)
+            let servedIdx = -1;
+            for(let i = data.length - 1; i > 0; i--) {
+                if(data[i][2] === "Dipanggil") {
+                    servedIdx = i;
+                    break;
+                }
+            }
+            
+            if (servedIdx !== -1) {
+                barisSedangDilayani = servedIdx;
+                document.getElementById('currentServed').innerText = data[servedIdx][1];
+                document.getElementById('currentName').innerText = data[servedIdx][0];
+            }
+
+            document.getElementById('syncStatus').innerText = "Tersinkronisasi: " + new Date().toLocaleTimeString();
+            document.getElementById('clock').innerText = "LIVE - " + new Date().toLocaleTimeString();
         });
     }
 
-    function panggilSekarang() {
-        if (barisBerikutnya === -1) return alert("Tidak ada antrian!");
-        
-        document.getElementById('statusPesan').innerText = "Memanggil...";
-        
-        fetch(scriptURL + "?aksi=panggil&baris=" + barisBerikutnya)
-        .then(() => {
-            document.getElementById('statusPesan').innerText = "Panggilan terkirim ke monitor.";
-            muatAntrian(); // Segarkan data
-        });
+    function panggilBaru() {
+        if (barisBerikutnya === -1) return;
+        fetch(scriptURL + "?aksi=panggil&baris=" + barisBerikutnya).then(() => updateDashboard());
     }
 
-    // Muat data saat pertama buka
-    muatAntrian();
+    function panggilUlang() {
+        if (barisSedangDilayani === -1) return alert("Belum ada yang dipanggil!");
+        fetch(scriptURL + "?aksi=panggil&baris=" + barisSedangDilayani).then(() => alert("Panggilan Ulang Terkirim"));
+    }
+
+    function bersihkanData() {
+        if (confirm("Hapus semua data antrian hari ini? Pastikan layanan sudah selesai.")) {
+            fetch(scriptURL + "?aksi=bersihkan")
+            .then(res => res.text())
+            .then(msg => {
+                alert(msg);
+                updateDashboard();
+            });
+        }
+    }
+
+    // Auto update 5 detik
+    setInterval(updateDashboard, 5000);
+    updateDashboard();
 </script>
 
 </body>
