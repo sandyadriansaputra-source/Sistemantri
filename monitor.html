@@ -94,30 +94,42 @@
             updateAntrian();
         }
 
-        function updateAntrian() {
-            if (!isStarted) return;
-            fetch(scriptURL)
-            .then(res => res.json())
-            .then(data => {
-                let antrian = data.slice().reverse().find(row => row[2] === "Dipanggil");
-                if (antrian && antrian[1] !== nomorTerakhir) {
-                    nomorTerakhir = antrian[1];
-                    document.getElementById('nomorDisplay').innerText = antrian[1];
-                    document.getElementById('namaDisplay').innerText = antrian[0];
-                    panggilSuara(antrian[1]);
-                }
-            })
-            .catch(err => console.log("Reconnecting..."));
-        }
-
-        function panggilSuara(nomor) {
-            let pesan = new SpeechSynthesisUtterance(`Nomor antrian ${nomor}, silakan menuju loket pelayanan`);
-            pesan.lang = 'id-ID';
-            pesan.rate = 0.85;
-            window.speechSynthesis.speak(pesan);
-        }
+        
 
         setInterval(updateAntrian, 5000);
-    </script>
+    </script>function updateData() {
+    if (!isStarted) return;
+    
+    fetch(scriptURL)
+    .then(res => res.json())
+    .then(res => {
+        // Update Running Text & Kecepatan secara otomatis
+        const ticker = document.querySelector('marquee');
+        ticker.innerText = res.config.runningText;
+        ticker.scrollAmount = res.config.speed;
+        
+        // Simpan volume untuk panggilSuara
+        window.currentVolume = res.config.volume;
+
+        // Logika Panggil Antrian
+        let data = res.dataAntrian;
+        let antrian = data.slice().reverse().find(row => row[2] === "Dipanggil");
+        
+        if (antrian && antrian[1] !== nomorTerakhir) {
+            nomorTerakhir = antrian[1];
+            document.getElementById('nomorDisplay').innerText = antrian[1];
+            document.getElementById('namaDisplay').innerText = antrian[0];
+            panggilSuara(antrian[1]);
+        }
+    });
+}
+
+function panggilSuara(nomor) {
+    let msg = new SpeechSynthesisUtterance(`Nomor antrian ${nomor}, silakan menuju loket`);
+    msg.lang = 'id-ID';
+    msg.volume = window.currentVolume || 1.0; // Mengikuti pengaturan di Sheet
+    window.speechSynthesis.speak(msg);
+}
+
 </body>
 </html>
